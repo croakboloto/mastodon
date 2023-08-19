@@ -40,10 +40,26 @@ REDIS_CACHE_PARAMS = {
   connect_timeout: 5,
 }.freeze
 
-REDIS_SIDEKIQ_PARAMS = {
-  driver: :hiredis,
-  url: ENV['SIDEKIQ_REDIS_URL'],
-  namespace: sidekiq_namespace,
-}.freeze
+sentinels = ENV.fetch('REDIS_SENTINELS', nil)
+sentinels_master = ENV.fetch('REDIS_MASTER_NAME', :mymaster)
+
+REDIS_SIDEKIQ_PARAMS = if sentinels
+                         {
+                           driver: :hiredis,
+                           host: sentinels_master,
+                           name: sentinels_master,
+                           sentinels: sentinels.split(',').map do |pair|
+                                        key, value = pair.split(':')
+                                        { host: key, port: value.to_i }
+                                      end,
+                           namespace: sidekiq_namespace,
+                         }.freeze
+                       else
+                         {
+                           driver: :hiredis,
+                           url: ENV['SIDEKIQ_REDIS_URL'],
+                           namespace: sidekiq_namespace,
+                         }.freeze
+                       end
 
 ENV['REDIS_NAMESPACE'] = "mastodon_test#{ENV['TEST_ENV_NUMBER']}" if Rails.env.test?
