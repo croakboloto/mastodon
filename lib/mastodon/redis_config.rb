@@ -63,3 +63,5 @@ else
 end
 
 REDIS_SIDEKIQ_PARAMS = redis_sidekiq_params.freeze
+
+ENV['REDIS_NAMESPACE'] = "mastodon_test#{ENV['TEST_ENV_NUMBER']}" if Rails.env.test?
