@@ -47,7 +47,7 @@ class RedisConfiguration
   end
 
   def sentinels_master
-    ENV.fetch('REDIS_MASTER_NAME', :mymaster)
+    ENV.fetch('REDIS_MASTER_NAME', 'mymaster')
   end
 
   private
