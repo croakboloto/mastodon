@@ -42,9 +42,24 @@ class RedisConfiguration
     ENV['REDIS_URL']
   end
 
+  def sentinels
+    ENV.fetch('REDIS_SENTINELS', nil)
+  end
+
+  def sentinels_master
+    ENV.fetch('REDIS_MASTER_NAME', 'mymaster')
+  end
+
   private
 
   def raw_connection
-    Redis.new(url: url, driver: :hiredis)
+    if sentinels
+      Redis.new(host: sentinels_master, name: sentinels_master, sentinels: sentinels.split(',').map do |pair|
+        key, value = pair.split(':')
+        { host: key, port: value.to_i }
+      end, driver: :hiredis)
+    else
+      Redis.new(url: url, driver: :hiredis)
+    end
   end
 end
